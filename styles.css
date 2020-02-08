@@ -1,0 +1,68 @@
+body {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; 
+}
+
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  #game {
+    background-color: #111;
+    height: 400px;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+    width: 400px;
+    z-index: 0;
+  }
+  
+  .startText {
+    color: white;
+    font-size: 3rem;
+    position: relative;
+    text-decoration: none;
+    top: 4rem;
+    z-index: 1; 
+    animation-duration: 2s;
+    animation-timing-function: linear;
+    animation-name: pulseText;
+    animation-direction: alternate;
+    animation-iteration-count: infinite;
+  }
+
+  .startText:hover {
+      color: yellow;
+  }
+
+  @keyframes pulseText {
+    from {
+      opacity: 1; 
+    }
+    to {
+      opacity: 0.5;
+    }
+  }
+
+  .snakeChunk {
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    z-index: -2;
+    background-color: rgb(0, 255, 242);
+  }
+
+  .food {
+    width: 12.5px;
+    height: 12.5px;
+    margin-left: 6.25px;
+    margin-top: 6.25px; 
+    position: absolute;
+    z-index: -2;
+    background-color: gray;
+  }
