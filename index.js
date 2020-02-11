@@ -460,12 +460,37 @@ function moveSnakes() {
 }
 
 function destroySnake(snake) {
+
     snake.active = false;
-    for (let i = 0; i < snake.chunks.length; i++) {;
-        let chunk = snake.chunks[i];
-        chunk.className += " vibrate destroyed";
-        snake.chunks.pop().remove;
+    var currentChunk = 0;
+    var deletedChunk = 0;
+    var totalChunks = snake.chunks.length;
+
+    function destroyChunk(chunk) {
+        if (currentChunk < totalChunks) {
+            snake.chunks[chunk].className += " vibrate destroyed";
+            currentChunk++; 
+            setTimeout(function() {
+                destroyChunk(currentChunk); 
+            }, 125); 
+        }
     }
+
+    function deleteChunks() {   
+        if (deletedChunk < totalChunks) {
+            snake.chunks.pop().remove();
+            deletedChunk++; 
+            setTimeout(function() {
+                deleteChunks(); 
+            }, 500); 
+        }
+    }
+
+    destroyChunk(currentChunk);
+
+    setTimeout(function() {
+        deleteChunks();
+    }, 500 * totalChunks); 
 }
 
 function createNewChunk(x, y, playerClass) {
