@@ -76,7 +76,7 @@ var isPaused = false;
 
 // Store info for end game display. 
 var lastSnakeStanding = null; 
-var biggestSnake = {name:"Nobody", food:"0"}; 
+var biggestSnake = {name:"NOBODY", food:"0"}; 
 var compliments = ["GARGANTUAN", "GLORIOUS", "SPECTACULAR", "GODLIKE", "HIDEOUS", "DEFORMED", "BLURFING", "SCHPLINDLEOUS"];
 var foods = ["FESTERING SCHWIMBLES", "TURNIPS", "SLIGHTLY SMALLER SNAKES", "WEIRD ROTATING SQUARES", "DARK MATTER", "PIXEL BITZ", "HAGGIS", "DOUGHNUT HOLES", "FRESH GLOMBLES", " PREMIUM SCHPLARFNITZLS", "TOAST"];
 var currentEndText = 0;
@@ -250,7 +250,7 @@ function start(players) {
     for (let i = 0; i < players; i++) {
         createSnake(startPositionsX[i], startPositionsY[i], startMoveDir[i], playerClasses[i], playerColors[i], playerNames[i]); 
     }
-    
+
     let countdown = createCenterGameText("3");
 
     setTimeout(function() {
@@ -579,12 +579,7 @@ function moveSnakes() {
 
 function destroySnake(snake) {
 
-    // Update scoring stuff. 
-    lastSnakeStanding = snake; 
-    if (biggestSnake == null || biggestSnake.food < snake.chunks.length - initLength) {
-        biggestSnake.name = snake.name;
-        biggestSnake.food = snake.chunks.length - initLength;
-    }
+
 
     // Dispose of this snake... with style (hopefully)! 
     snake.alive = false;
@@ -625,13 +620,22 @@ function destroySnake(snake) {
 }
 
 function checkGameOver() {
-    for (let currentSnake = 0; currentSnake < snakes.length; currentSnake++) {
+    let snakesLeft = 0;
+    for (let snakeNo = 0; snakeNo < snakes.length; snakeNo++) {
+        let currentSnake = snakes[snakeNo]; 
         if (currentSnake.alive) {
-            return;
+            // Update scoring stuff. 
+            lastSnakeStanding = currentSnake; 
+            if (biggestSnake.food < currentSnake.chunks.length - initLength) {
+                biggestSnake.name = currentSnake.name;
+                biggestSnake.food = currentSnake.chunks.length - initLength;
+            }
+            snakesLeft++; 
         }
     }
-    // If no snakes have returned this function, i.e. are alive, then return false! None alive! 
-    showEndScreen();
+    if (snakesLeft < 2) {
+        showEndScreen();
+    }
 }
 
 function createNewChunk(x, y, playerClass) {
