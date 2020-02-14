@@ -78,6 +78,7 @@ var isPaused = false;
 var lastSnakeStanding = null; 
 var biggestSnake = {name:"NOBODY", food:"0"}; 
 var compliments = ["GARGANTUAN", "GLORIOUS", "SPECTACULAR", "GODLIKE", "HIDEOUS", "DEFORMED", "BLURFING", "SCHPLINDLEOUS"];
+var eating = ["SCOFFED", "MUNCHED ON", "SCARFED", "GOBBLED", "SCHLOIMBRD", "FIT INTO THEIR GOBHOLE", "SCRIMBLED", "GNASHED", "STOLE FROM THE MOUTHS OF CHILDREN"];
 var foods = ["FESTERING SCHWIMBLES", "TURNIPS", "SLIGHTLY SMALLER SNAKES", "WEIRD ROTATING SQUARES", "DARK MATTER", "PIXEL BITZ", "HAGGIS", "DOUGHNUT HOLES", "FRESH GLOMBLES", " PREMIUM SCHPLARFNITZLS", "TOAST"];
 var currentEndText = 0;
 var endTexts = [];
@@ -144,6 +145,9 @@ function showPlayersScreen() {
     clearScreen(); 
     state = PLAYERS_SCREEN; 
 
+    let container = document.createElement("div");
+    container.className = "centeredText";
+
     let pl1 = document.createElement("a"); 
     let pl2 = document.createElement("a");
     let pl3 = document.createElement("a");
@@ -169,10 +173,11 @@ function showPlayersScreen() {
     pl3.href = "javascript:start(3)";
     pl4.href = "javascript:start(4)";
 
-    GAME.appendChild(pl1);
-    GAME.appendChild(pl2);
-    GAME.appendChild(pl3);
-    GAME.appendChild(pl4);
+    // GAME.appendChild(pl1);
+    container.appendChild(pl2);
+    container.appendChild(pl3);
+    container.appendChild(pl4);
+    GAME.appendChild(container);
 }
 
 function showSettingsScreen() {
@@ -186,19 +191,25 @@ function showEndScreen() {
     state = GAME_OVER_SCREEN;
     currentEndText = 0;
     let endTexts = [];
-    endTexts[0] = `THE LAST SNAKE STANDING WAS ${lastSnakeStanding.name}`;
-    endTexts[1] =  `THE MOST ${compliments[Math.round((Math.random() * (compliments.length - 1)))]} SNAKE WAS ${biggestSnake.name} WHO MUNCHED ON ${biggestSnake.food} PIECES OF ${foods[Math.round((Math.random() * (foods.length - 1)))]}.`;
+    let lastSnakeName = lastSnakeStanding == null ? "ABSOLUTELY NOBODY!" : lastSnakeStanding.name;
+    endTexts[0] = `THE LAST SNAKE STANDING WAS ${lastSnakeName}`;
+    endTexts[1] =  `THE MOST ${compliments[Math.round((Math.random() * (compliments.length - 1)))]} SNAKE WAS ${biggestSnake.name} WHO ${eating[Math.round((Math.random() * (eating.length - 1)))]} ${biggestSnake.food} PIECES OF ${foods[Math.round((Math.random() * (foods.length - 1)))]}.`;
 
     let pl1 = document.createElement("a"); 
-    pl1.className = "interactiveText";
+    pl1.className = "endText";
     pl1.innerText = endTexts[0];
-    pl1.href = "javascript:nextEndText()";
     GAME.appendChild(pl1);
-}
 
-function nextEndText() {
-    let el = document.querySelector("a");
-    el.innerText = endTexts[++currentEndText]; 
+    setTimeout(function() {
+        // After text has faded out again. 
+        pl1.innerText = endTexts[1];
+        setTimeout(function() {
+            pl1.remove();
+            setTimeout(function() {
+                showTitle(); 
+            }, 500);
+        }, 10000); 
+    }, 10000); 
 }
 
 function createSnake(originX, originY, initialMoveDir, playerClass, playerColor, playerName) {
@@ -459,7 +470,7 @@ function setMoveDir(e) {
         case PLAYERS_SCREEN:
             switch(e.which) {
                 case NUM_1:
-                    start(1); 
+                    // start(1); 
                     break;
                 case NUM_2:
                     start(2);
@@ -476,7 +487,7 @@ function setMoveDir(e) {
         case GAME_OVER_SCREEN:
             switch(e.which) {
                 case SPACE:
-                    nextEndText();
+                    console.log("This was supposed to do something lol");
             }
             break;
     }
@@ -578,8 +589,6 @@ function moveSnakes() {
 }
 
 function destroySnake(snake) {
-
-
 
     // Dispose of this snake... with style (hopefully)! 
     snake.alive = false;
