@@ -250,9 +250,7 @@ function start(players) {
     for (let i = 0; i < players; i++) {
         createSnake(startPositionsX[i], startPositionsY[i], startMoveDir[i], playerClasses[i], playerColors[i], playerNames[i]); 
     }
-
     
-
     let countdown = createCenterGameText("3");
 
     setTimeout(function() {
