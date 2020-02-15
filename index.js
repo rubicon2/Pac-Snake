@@ -264,6 +264,35 @@ function start(players) {
 
     let countdown = createCenterGameText("3");
 
+    function updateCountdown() {
+        
+    }
+
+    countdown.addEventListener("animationiteration", function() {
+        console.log("UPDATE COUNTDOWN!"); 
+        let newText = parseInt(countdown.innerText) - 1;
+        if (parseInt(newText) < 1) {
+            newText = "GO!"; 
+            // Kick off interval that moves the snakes. 
+            resetMoveTimer(500);
+            setTimeout(function() {
+                countdown.style.animationIterationCount = 1;
+                countdown.style.animationName = "fadeOut";
+                countdown.addEventListener("animationend", function() {
+                    countdown.remove();
+                    spawnFood();
+                }, false); 
+                /*
+                setTimeout(function() {
+                    countdown.remove();
+                    spawnFood();
+                }, 1000)*/ 
+            }, 1000);
+        }
+        countdown.innerText = newText; 
+    }, false);
+
+    /*
     setTimeout(function() {
         countdown.innerText = "2"; 
         setTimeout(function() {
@@ -281,7 +310,8 @@ function start(players) {
                 }, 1000); 
             }, 1000);
         }, 1000);
-    }, 1000);  
+    }, 1000);
+    */
 }
 
 function createCenterGameText(newText) {
@@ -635,11 +665,11 @@ function checkGameOver() {
         if (currentSnake.alive) {
             // Update scoring stuff. 
             lastSnakeStanding = currentSnake; 
-            if (biggestSnake.food < currentSnake.chunks.length - initLength) {
-                biggestSnake.name = currentSnake.name;
-                biggestSnake.food = currentSnake.chunks.length - initLength;
-            }
             snakesLeft++; 
+        }
+        if (biggestSnake.food < currentSnake.score) {
+            biggestSnake.name = currentSnake.name;
+            biggestSnake.food = currentSnake.score;
         }
     }
     if (snakesLeft < 2) {

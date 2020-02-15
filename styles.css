@@ -65,7 +65,7 @@ body {
   font-size: 5rem;
   width: 400px;
   margin-top: 140px;
-  animation: 1s infinite forwards countdownIntoScreen;
+  animation: 1s 4 forwards countdownIntoScreen;
 }
 
 @keyframes countdownIntoScreen {
