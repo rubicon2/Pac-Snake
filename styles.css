@@ -1,5 +1,13 @@
 body {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; 
+    color: white; 
+    size: 3rem;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .unselectable {
@@ -36,26 +44,12 @@ body {
   animation-iteration-count: infinite;
 }
 
-.subtitle {
-  position: absolute;
-  color: white;
-  z-index: 20;
-  font-size: 1.75rem;
-  width: 300px;
-  margin-top: 160px;
-  margin-left: 50px;
-  animation: 1s infinite alternate subtitleAnim;
-}
-
-@keyframes subtitleAnim {
-  from {
-    transform: scale(0.9, 0.9);
-    color: rebeccapurple;
-  }
-  to {
-    transform: scale(1.1, 1.1);
-    color: yellow;
-  }
+.pulse {
+  animation-duration: 2s;
+  animation-timing-function: linear;
+  animation-name: pulse;
+  animation-direction: alternate;
+  animation-iteration-count: infinite; 
 }
 
 .countdownText {
@@ -88,25 +82,86 @@ body {
   }
 }
 
-.centeredText {
+.playerTextContainer {
   margin: 0;
   position: absolute;
-  top: 25%;
   width: 400px;
-  transform: translateY(-25%);
+  height: 400px; 
+  z-index: 20; 
 }
 
-.endText {
+.setupLine {
+  width: 100%; 
+  height: 12.5%; 
+  text-align: center;
+  font-size: 30px; 
+}
+
+.setupOption {
+  margin-top: -15px; 
+  margin-left: 10px; 
+  margin-right: 10px; 
+  width: 30%; 
+  height: 100%;
+  display: inline-block;
+}
+
+.setupTitle {
+  margin-top: 12.5px; 
+  height: auto; 
+}
+
+.setupText {
+  top: 25px; 
+  height: auto;
+  transform: translateY(-50%);
+}
+
+.add {
+  width: 50px;
+  height:100%; 
+  background-image: url("add.png");
+}
+
+.sub {
+  height:100%; 
+  width: 50px;
+  background-image: url("sub.png");
+}
+
+.centeredText {
   margin: 0;
   position: absolute;
   top: 50%;
   width: 400px;
-  transform: translate(-50%, -50%);
-
+  transform: translate(0%, -50%);
   color: white;
   font-size: 2.5rem;
   text-decoration: none;
-  z-index: 1; 
+  z-index: 20; 
+}
+
+.roundOver {
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-name: roundOverEffect;
+  animation-direction: alternate;
+  animation-iteration-count: infinite; 
+}
+
+@keyframes roundOverEffect {
+  0% {
+    color: red;
+  }
+  50% {
+    color: blue;
+  }
+  100% {
+    color: white;
+  }
+}
+
+.fadeInOut {
   animation-duration: 10s;
   animation-timing-function: linear;
   animation-name: fadeInOut;
@@ -147,19 +202,19 @@ body {
 }
 
 .player1 {
-  background-color: yellow;
+  background-color: #ff66cc;
 }
 
 .player2 {
-  background-color: rgb(0, 220, 213);
+  background-color: #1a66ff; 
 }
 
 .player3 {
-  background-color: rgb(213, 50, 0)
+  background-color: rgb(213, 50, 0); 
 }
 
 .player4 {
-  background-color: rgb(30, 190, 0)
+  background-color: rgb(30, 190, 0); 
 }
 
 .snakeChunk {
@@ -167,7 +222,7 @@ body {
   height: 25px;
   position: absolute;
   z-index: -2;
-  transition-duration: 2s;
+  
   animation-duration: 2s;
   animation-timing-function: linear;
   animation-name: pulse;
@@ -175,8 +230,43 @@ body {
   animation-iteration-count: infinite;
 }
 
+.snakeHead {
+  background-image: url("head_1.png");
+}
+
+.image {
+  background-repeat: no-repeat;
+  background-size: cover;
+  image-rendering: pixelated;
+}
+
 .destroyed {
-  background-color: red;
+  z-index: -3;
+  animation: destroyedAnim 1000ms linear infinite, vibrateAnim 40ms infinite alternate;
+}
+
+@keyframes destroyedAnim {
+  0% {
+    opacity: 1;
+  }
+  10% {
+    background-color: red;
+  }
+  30% {
+    background-color: orangered;
+  }
+  30% {
+    background-color: yellow;
+  }
+  40% {
+    background-color: white;
+  }
+  50% {
+    background-color: darkblue;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .vibrate {
@@ -192,7 +282,7 @@ body {
     transform: scale(0.8, 0.8);
   }
   to {
-    transform: scale(1.2, 1.2);
+    transform: scale(1.1, 1.1);
   }
 }
 

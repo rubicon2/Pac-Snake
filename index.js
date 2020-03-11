@@ -1,4 +1,4 @@
-// Array of players, contains arrays of each player's snake chunk positions. 
+// Very exciting stuff. 
 const GAME = document.getElementById("game"); 
 const SCORE = document.getElementById("score");
 const GAME_WIDTH = GAME.offsetWidth; 
@@ -7,9 +7,6 @@ const OBJECT_SIZE = 25;
 const MAX_X_POS = GAME_WIDTH - OBJECT_SIZE;
 const MAX_Y_POS = GAME_HEIGHT - OBJECT_SIZE;
 
-var moveInterval = null;
-var foodTimeout = null; 
-
 // Game states.
 const TITLE_SCREEN = 0;
 const PLAYERS_SCREEN = 1;
@@ -17,23 +14,23 @@ const SETTINGS_SCREEN = 2;
 const GAME_SCREEN = 3;
 const GAME_OVER_SCREEN = 4;
 
-var state = TITLE_SCREEN;
-
 // In place of enumeration for player movement directions - not sure if js properly does those. 
 const UP = 1;
 const RIGHT = 2;
 const DOWN = 3;
 const LEFT = 4;
  
-// Used to pause/unpause the game. 
+// Used to quit back to title. 
 const ESCAPE = 27; 
 // Used to skip through screens without using the mouse. 
 const SPACE = 32; 
+
 // Used to select number of players without a mouse. 
 const NUM_1 = 49;
 const NUM_2 = 50;
 const NUM_3 = 51;
 const NUM_4 = 52; 
+
 // Input keycodes for each player.
 
 // Arrow keys.
@@ -61,18 +58,42 @@ const PLAYER_4_DOWN = 101;
 const PLAYER_4_LEFT = 100;
 
 // Data for creating the snakes. 
+const startLengths = [12, 12, 6, 3];
 const startPositionsX = [50, 325,  50, 325];
 const startPositionsY = [50, 325, 325,  50]; 
 const startMoveDir = [UP, DOWN, LEFT, RIGHT]; 
 const playerNames = ["YELLOW", "BLUE", "RED", "GREEN"];
-const playerColors = ["yellow", "rgb(0, 220, 213)", "rgb(213, 50, 0)", "rgb(30, 190, 0)"];
 const playerClasses = ["player1", "player2", "player3", "player4"];
-const initLength = 3;
 
-// Stuff to be used for game loop. 
+// Different speeds. 
+const SLOW = 125;
+const NORMAL = 250; 
+const FAST = 375; 
+const INSANE = 500; 
+
+const GAME_SPEED = [{name:"SLOW", speed:500}, {name:"NORMAL", speed:325}, {name:"FAST", speed:200}, {name:"FASTER", speed:75}, {name:"INSANE", speed:50}];
+
+// "Global" stuff. 
+var state = TITLE_SCREEN;
+
+// Stuff to be used for main game loop. 
+var moveInterval = null;
+var foodTimeout = null; 
+
+var playerData = [];
 var snakes = []; 
 var supermarket = [];
+
 var isPaused = false;
+var gameOver = false; 
+var roundOver = false;
+
+var playersYo = 2;
+var initLength = 0;
+var roundsToWin = 3;
+var gameSpeedSetting = 2; 
+
+var currentRound = 0;
 
 // Store info for end game display. 
 var lastSnakeStanding = null; 
@@ -85,12 +106,19 @@ var endTexts = [];
 
 function clearScreen() {
 
+    // WARNING! 
+    // Don't clear lastSnakeStanding or biggestSnake values in here, because they need to hold their values between the game and game over screens. 
+    // They are reset in the start() function instead. 
+
     clearInterval(moveInterval);
     clearTimeout(foodTimeout);
     moveInterval = null;
     foodTimeout = null; 
     snakes = [];
     supermarket = [];
+    gameOver = false;
+    roundOver = false; 
+    isPaused = false; 
 
     let children = document.querySelectorAll("#game *"); 
     for (let i = 0; i < children.length; i++) {
@@ -106,23 +134,16 @@ function showTitle() {
     let title = document.createElement("a");
     title.className = "interactiveText unselectable";
     title.innerText = "PAC-SNAKE";  
-    title.href = "javascript:showPlayersScreen()";
+    title.href = "javascript:showSetupScreen()";
     GAME.appendChild(title);
 
-    /*
-    let text = document.createElement("div");
-    text.className = "subtitle unselectable";
-    text.innerText = "THE LAST SNAKE STANDING WINS";
-    GAME.appendChild(text);
-    */
-
-    createSnake(0, 25, RIGHT, playerClasses[0], playerColors[0], "nothing");
-    createSnake(375, 125, LEFT, playerClasses[1], playerColors[1], "literally doesn't matter");
-    createSnake(25, 325, UP, playerClasses[2], playerColors[2], "who cares");
-    createSnake(350, 325, DOWN, playerClasses[3], playerColors[3], "filler");
+    createSnake(0, 25, 3, RIGHT, playerClasses[0], "nothing");
+    createSnake(375, 125, 3, LEFT, playerClasses[1], "literally doesn't matter");
+    createSnake(25, 325, 3, UP, playerClasses[2], "who cares");
+    createSnake(350, 325, 3, DOWN, playerClasses[3], "filler");
 
     // Kick off interval that moves the snakes. 
-    resetMoveTimer(500);
+    resetMoveTimer(GAME_SPEED[1].speed);
 }
 
 function resetMoveTimer(time) {
@@ -133,7 +154,7 @@ function resetMoveTimer(time) {
 }
 
 addEventListener("keydown", function(e) {
-    setMoveDir(e);
+    handleInput(e);
 })
 
 addEventListener("load", function() {
@@ -146,7 +167,7 @@ function showPlayersScreen() {
     state = PLAYERS_SCREEN; 
 
     let container = document.createElement("div");
-    container.className = "centeredText";
+    container.className = "playerTextContainer";
 
     let pl1 = document.createElement("a"); 
     let pl2 = document.createElement("a");
@@ -168,10 +189,10 @@ function showPlayersScreen() {
     pl3.innerText = "THREE PLAYERS \n"; 
     pl4.innerText = "FOUR PLAYERS"; 
 
-    pl1.href = "javascript:start(1)";
-    pl2.href = "javascript:start(2)";
-    pl3.href = "javascript:start(3)";
-    pl4.href = "javascript:start(4)";
+    pl1.href = "javascript:startGame(1)";
+    pl2.href = "javascript:startGame(2)";
+    pl3.href = "javascript:startGame(3)";
+    pl4.href = "javascript:startGame(4)";
 
     // GAME.appendChild(pl1);
     container.appendChild(pl2);
@@ -180,15 +201,168 @@ function showPlayersScreen() {
     GAME.appendChild(container);
 }
 
-function showSettingsScreen() {
+function setupLessRounds() {
+    if (roundsToWin > 1) {
+        roundsToWin--; 
+        document.getElementById("setup_rounds").innerText = roundsToWin; 
+    }
+}
+
+function setupMoreRounds() {
+    if (roundsToWin < Number.MAX_SAFE_INTEGER) {
+        roundsToWin++; 
+        document.getElementById("setup_rounds").innerText = roundsToWin; 
+    }
+}
+
+function setupLessPlayers() {
+    if (playersYo > 2) {
+        playersYo--; 
+        document.getElementById("setup_players").innerText = playersYo; 
+        document.getElementById("setup_ok").href = `javascript:startGame(${playersYo})`;
+    }   
+}
+
+function setupMorePlayers() {
+    if (playersYo < 4) {
+        playersYo++; 
+        document.getElementById("setup_players").innerText = playersYo; 
+        document.getElementById("setup_ok").href = `javascript:startGame(${playersYo})`;
+    }
+}
+
+function setupLowerSpeed() {
+    if (gameSpeedSetting > 0) {
+        gameSpeedSetting--; 
+        document.getElementById("setup_speed").innerText = GAME_SPEED[gameSpeedSetting].name; 
+    }
+}
+
+function setupHigherSpeed() {
+    if (gameSpeedSetting < GAME_SPEED.length - 1) {
+        gameSpeedSetting++; 
+        document.getElementById("setup_speed").innerText = GAME_SPEED[gameSpeedSetting].name; 
+    }
+}
+
+function showSetupScreen() {
+
     clearScreen(); 
     state = SETTINGS_SCREEN;
+
+    let settingsContainer = document.createElement("div"); 
+    settingsContainer.className = "playerTextContainer"; 
+
+    let roundsTitleLine = document.createElement("div");
+    roundsTitleLine.className = "setupLine"; 
+
+    let roundsTitle = document.createElement("div");
+    roundsTitle.className = "setupTitle"; 
+    roundsTitle.innerText = "ROUNDS TO WIN"; 
+
+    roundsTitleLine.appendChild(roundsTitle); 
+
+    let snakesTitleLine = document.createElement("div");
+    snakesTitleLine.className = "setupLine"; 
+    snakesTitleLine.innerText = "SNAKES"; 
+
+    let speedTitleLine = document.createElement("div");
+    speedTitleLine.className = "setupLine"; 
+    speedTitleLine.innerText = "SPEED"; 
+
+    let roundsLine = document.createElement("div"); 
+    roundsLine.className = "setupLine"; 
+
+    let lessRounds = document.createElement("a");
+    lessRounds.className = "setupOption image sub"; 
+    lessRounds.href = "javascript:setupLessRounds()"; 
+
+    let rounds = document.createElement("div");
+    rounds.innerText = roundsToWin;  
+    rounds.className = "setupOption setupText pulse"; 
+    rounds.id = "setup_rounds"; 
+
+    let moreRounds = document.createElement("a");
+    moreRounds.className = "setupOption image add"; 
+    moreRounds.href = "javascript:setupMoreRounds()"; 
+
+    roundsLine.appendChild(lessRounds); 
+    roundsLine.appendChild(rounds); 
+    roundsLine.appendChild(moreRounds); 
+
+    let playersLine = document.createElement("div"); 
+    playersLine.className = "setupLine"; 
+
+    let lessPlayers = document.createElement("a");
+    lessPlayers.className = "setupOption image sub"; 
+    lessPlayers.href = "javascript:setupLessPlayers()"; 
+
+    let morePlayers = document.createElement("a");
+    morePlayers.className = "setupOption image add"; 
+    morePlayers.href = "javascript:setupMorePlayers()"; 
+
+    let players = document.createElement("div");
+    players.innerText = playersYo;  
+    players.className = "setupOption setupText pulse"; 
+    players.id = "setup_players"; 
+
+    playersLine.appendChild(lessPlayers); 
+    playersLine.appendChild(players); 
+    playersLine.appendChild(morePlayers); 
+
+    let speedLine = document.createElement("div"); 
+    speedLine.className = "setupLine"; 
+
+    let slowerSpeed = document.createElement("a"); 
+    slowerSpeed.className = "setupOption image sub"; 
+    // slowerSpeed.innerText = "SLOWER"; 
+    slowerSpeed.href = "javascript:setupLowerSpeed()"; 
+
+    let fasterSpeed = document.createElement("a"); 
+    fasterSpeed.className = "setupOption image add"; 
+    // fasterSpeed.innerText = "FASTER"; 
+    fasterSpeed.href = "javascript:setupHigherSpeed()"; 
+
+    let gameSpeedDiv = document.createElement("div"); 
+    gameSpeedDiv.innerText = GAME_SPEED[gameSpeedSetting].name; 
+    gameSpeedDiv.className = "setupOption setupText pulse"; 
+    gameSpeedDiv.id = "setup_speed"; 
+
+    speedLine.appendChild(slowerSpeed); 
+    speedLine.appendChild(gameSpeedDiv); 
+    speedLine.appendChild(fasterSpeed); 
+
+    let okLine = document.createElement("div"); 
+    okLine.className = "setupLine"; 
+
+    let ok = document.createElement("a"); 
+    ok.className = "setupOption setupText"; 
+    ok.innerText = "OK"; 
+    ok.id = "setup_ok"; 
+    ok.href = `javascript:startGame(${playersYo})`;
+
+    okLine.appendChild(ok); 
+
+    settingsContainer.appendChild(roundsTitleLine); 
+    settingsContainer.appendChild(roundsLine); 
+
+    settingsContainer.appendChild(snakesTitleLine); 
+    settingsContainer.appendChild(playersLine); 
+
+    settingsContainer.appendChild(speedTitleLine); 
+    settingsContainer.appendChild(speedLine); 
+
+    settingsContainer.appendChild(okLine); 
+
+    GAME.appendChild(settingsContainer); 
+    
 }
 
 function showEndScreen() {
 
     clearScreen();
     state = GAME_OVER_SCREEN;
+
     currentEndText = 0;
     let endTexts = [];
     let lastSnakeName = lastSnakeStanding == null ? "ABSOLUTELY NOBODY!" : lastSnakeStanding.name;
@@ -196,10 +370,12 @@ function showEndScreen() {
     endTexts[1] =  `THE MOST ${compliments[Math.round((Math.random() * (compliments.length - 1)))]} SNAKE WAS ${biggestSnake.name} WHO ${eating[Math.round((Math.random() * (eating.length - 1)))]} ${biggestSnake.food} PIECES OF ${foods[Math.round((Math.random() * (foods.length - 1)))]}.`;
 
     let pl1 = document.createElement("a"); 
-    pl1.className = "endText";
+    pl1.className = "centeredText";
     pl1.innerText = endTexts[0];
     GAME.appendChild(pl1);
 
+
+    // Re-do this so uses event listeners etc.! More reliable timing! 
     setTimeout(function() {
         // After text has faded out again. 
         pl1.innerText = endTexts[1];
@@ -212,19 +388,27 @@ function showEndScreen() {
     }, 10000); 
 }
 
-function createSnake(originX, originY, initialMoveDir, playerClass, playerColor, playerName) {
+// Called at start of a round. 
+function createSnake(originX, originY, startLength, initialMoveDir, playerClass, playerName) {
 
     let newSnake = new Object();
     newSnake.name = playerName; 
     newSnake.class = playerClass;
-    newSnake.color = playerColor;
     newSnake.alive = true;
-    newSnake.score = 0;
     newSnake.nextMoveDir = initialMoveDir;
     newSnake.lastMoveDir = initialMoveDir; 
-
-    newSnake.targetLength = initLength; 
+    newSnake.targetLength = startLength; 
     newSnake.chunks = []; 
+
+    // Stats for fun time end screens. 
+    // How much food eaten. 
+    newSnake.score = 0;
+    // ...
+    newSnake.roundsWon = 0; 
+    // Names of players that has caused their deaths. Can use this to make a nemesis/rival thing! 
+    newSnake.killedBy = [];
+    // Names of players whose deaths they have caused. 
+    newSnake.killed = []; 
 
     for (let i = 0; i < newSnake.targetLength; i++) {
         // Work out x and y for new chunk piece.
@@ -244,79 +428,82 @@ function createSnake(originX, originY, initialMoveDir, playerClass, playerColor,
                 xMult = i * -1;
                 break; 
         }
-        let anotherChunk = createNewChunk((originX + (OBJECT_SIZE * xMult)) % GAME_WIDTH, (originY + (OBJECT_SIZE * yMult)) % GAME_HEIGHT, playerClass); 
+        let chunkClass = i == 0 ? playerClass + " image snakeHead" : playerClass;
+        let anotherChunk = createNewChunk((originX + (OBJECT_SIZE * xMult)) % GAME_WIDTH, (originY + (OBJECT_SIZE * yMult)) % GAME_HEIGHT, chunkClass); 
+        anotherChunk.style.transform = getRotation(initialMoveDir); 
         newSnake.chunks.push(anotherChunk); 
         GAME.appendChild(anotherChunk); 
     }
     snakes.push(newSnake); 
 }
 
-function start(players) {
+
+function startGame(players) {
+    playerData = []; 
+    for (let i = 0; i < players; i++) {
+        let player = new Object(); 
+        player.roundsWon = 0;
+        player.killed = [];
+        player.killedBy = []; 
+        playerData.push(player); 
+    }
+    startRound(players); 
+}
+
+function startRound(players) {
+
+    currentRound++; 
+    roundOver = false;
 
     // Clear the play space. 
     clearScreen();
     state = GAME_SCREEN;
 
+    // Reset high score values. 
+    lastSnakeStanding = null;
+    biggestSnake.name = "ABSOLUTELY NOBODY";
+    biggestSnake.food = 0; 
+
     // Create the number of snakes we need and their initial chunks. 
     for (let i = 0; i < players; i++) {
-        createSnake(startPositionsX[i], startPositionsY[i], startMoveDir[i], playerClasses[i], playerColors[i], playerNames[i]); 
+        createSnake(startPositionsX[i], startPositionsY[i], startLengths[players - 1], startMoveDir[i], playerClasses[i], playerNames[i]); 
     }
 
-    let countdown = createCenterGameText("3");
+    let countdown = createText("3", "countdownText unselectable");
 
     function updateCountdown() {
-        
-    }
-
-    countdown.addEventListener("animationiteration", function() {
-        console.log("UPDATE COUNTDOWN!"); 
         let newText = parseInt(countdown.innerText) - 1;
         if (parseInt(newText) < 1) {
-            newText = "GO!"; 
-            // Kick off interval that moves the snakes. 
-            resetMoveTimer(500);
+            newText = "GO!";
+            // Sets snakes moving. 
+            resetMoveTimer(GAME_SPEED[gameSpeedSetting].speed); 
+            // Change animation/iteration so "GO!" will fade out nicely, then remove itself and clear all event listeners. 
             setTimeout(function() {
+                // Need to change this here and THEN add event listener for animation end so it doesn't trigger from where it was doing more than 1 iteration. 
                 countdown.style.animationIterationCount = 1;
-                countdown.style.animationName = "fadeOut";
-                countdown.addEventListener("animationend", function() {
-                    countdown.remove();
-                    spawnFood();
-                }, false); 
-                /*
+                countdown.style.animationName = "fadeOut"; 
                 setTimeout(function() {
-                    countdown.remove();
-                    spawnFood();
-                }, 1000)*/ 
-            }, 1000);
+                    countdown.addEventListener("animationend", removeCountdown, false);
+                }, 1000);
+            }, 1000); 
         }
         countdown.innerText = newText; 
-    }, false);
+    }
 
-    /*
-    setTimeout(function() {
-        countdown.innerText = "2"; 
-        setTimeout(function() {
-            countdown.innerText = "1"; 
-            setTimeout(function() {
-                countdown.innerText = "GO!"; 
-                // Kick off interval that moves the snakes. 
-                resetMoveTimer(500);
-                setTimeout(function() {
-                    countdown.style.animationName = "fadeOut";
-                    setTimeout(function() {
-                        countdown.remove();
-                        spawnFood();
-                    }, 1000)
-                }, 1000); 
-            }, 1000);
-        }, 1000);
-    }, 1000);
-    */
+    function removeCountdown() {
+        console.log("REMOVING!!");
+        countdown.removeEventListener("animationiteration", updateCountdown, false);
+        countdown.removeEventListener("animationend", removeCountdown, false); 
+        countdown.remove();
+        spawnFood();
+    }
+
+    countdown.addEventListener("animationiteration", updateCountdown, false); 
 }
 
-function createCenterGameText(newText) {
+function createText(newText, classes) {
     let text = document.createElement("div");
-    text.className = "countdownText unselectable";
+    text.className = classes;
     text.innerText = newText;
     GAME.appendChild(text); 
     return text;
@@ -351,8 +538,7 @@ function spawnFood() {
                 break;
             }
         }
-    } while (xyOK == false)
-
+    } while (xyOK == false); 
 
     let food = document.createElement("div"); 
     food.className = "food"; 
@@ -362,7 +548,7 @@ function spawnFood() {
     GAME.appendChild(food); 
 }
 
-function setMoveDir(e) {
+function handleInput(e) {
 
     switch(state) {
         case GAME_SCREEN:
@@ -389,7 +575,14 @@ function setMoveDir(e) {
             switch(e.which) {
                 // Pause. 
                 case SPACE:
-                    isPaused = (isPaused) ? false : true; 
+                    if (!roundOver) {
+                        isPaused = (isPaused) ? false : true;
+                    } else if (!gameOver) {
+                        startRound(playerData.length); 
+                    } else {
+                        showEndScreen(); 
+                    }
+                     
                     break; 
 
                 case ESCAPE:
@@ -486,7 +679,8 @@ function setMoveDir(e) {
         case TITLE_SCREEN:
             switch(e.which) {
                 case SPACE:
-                    showPlayersScreen();
+                    // showPlayersScreen();
+                    showSetupScreen(); 
                     break;
             }
             break;
@@ -503,13 +697,13 @@ function setMoveDir(e) {
                     // start(1); 
                     break;
                 case NUM_2:
-                    start(2);
+                    startGame(2);
                     break;
                 case NUM_3:
-                    start(3);
+                    startGame(3);
                     break;
                 case NUM_4:
-                    start(4);
+                    startGame(4);
                     break;
             }
             break;
@@ -523,9 +717,46 @@ function setMoveDir(e) {
     }
 }
 
+function getRotation(moveDir) {
+
+    let newRotation = ""; 
+
+    switch(moveDir) {
+        case UP:
+            newRotation = "rotate(180deg)";
+            break;
+        case RIGHT:
+            newRotation = "rotate(270deg)";
+            break;
+        case DOWN:
+            newRotation = "rotate(0deg)"; 
+            break;
+        case LEFT:
+            newRotation = "rotate(90deg)"; 
+            break;
+    }
+
+    return newRotation; 
+}
+
 function moveSnakes() {
 
-    if (!isPaused) {
+    if (!isPaused && !gameOver && !roundOver) {
+
+        // Remove the tail of each snake before doing any collision checking. 
+        // As each snake moves sequentially, but it looks simultaneous - this solves the issue of players hitting and being killed by 
+        // another's (or their own) tail when it should have moved out of the way in the same step, as the head moves into the space the tail once occupied. 
+        for (let i = 0; i < snakes.length; i++) {
+            let currentSnake = snakes[i]; 
+            // The last chunk on the end of the array, is removed - unless the amount of chunks is less than the targetLength!  
+            if (currentSnake.chunks.length > currentSnake.targetLength) {
+                currentSnake.chunks.pop().remove();
+            }
+        }
+
+        // Need to change this so calculates projected positions - checks against other snakes projected positions. 
+        // If there is a conflict, kill all snakes involved so this is actually fair! 
+        // Otherwise, player 1 has an advantage over everyone else, and player 2 over 3 and 4, etc. as player 1 moves first. 
         for (let i = 0; i < snakes.length; i++) {
 
             let currentSnake = snakes[i]; 
@@ -536,6 +767,7 @@ function moveSnakes() {
             // Calculate predicted new position. 
             let newX = posToInt(currentSnake.chunks[0].style.left); 
             let newY = posToInt(currentSnake.chunks[0].style.top); 
+            newRotation = getRotation(currentSnake.nextMoveDir); 
     
             switch(currentSnake.nextMoveDir) {
                 case UP:
@@ -581,6 +813,10 @@ function moveSnakes() {
             // Collision detection for those not so gorgeous snakes... 
             for (let snakeAisle = 0; snakeAisle < snakes.length; snakeAisle++) {
                 let otherSnake = snakes[snakeAisle]; 
+                // If other snake is dead, then don't bother checking - player can run over dead snakes without dying. 
+                if (!otherSnake.alive) {
+                    continue;
+                }
                 // If the "otherSnake" is THIS snake, ignore the first entry in the chunks array. 
                 for (let snakeChunk = 0; snakeChunk < otherSnake.chunks.length; snakeChunk++) {
                     if (snakeAisle == i && snakeChunk == 0) {
@@ -603,14 +839,15 @@ function moveSnakes() {
             }
     
             // If no collisions are detected, a new chunk is created and added onto the front of the array, with the newX and Y positions.
-            let anotherChunk = createNewChunk(newX, newY, currentSnake.class);
+            let anotherChunk = createNewChunk(newX, newY, currentSnake.class + " image snakeHead");
+            anotherChunk.style.transform = newRotation; 
             currentSnake.chunks.unshift(anotherChunk);
             GAME.appendChild(anotherChunk); 
-    
-            // The last chunk on the end of the array, is removed - unless the amount of chunks is less than the targetLength!  
-            if (currentSnake.chunks.length > currentSnake.targetLength) {
-                currentSnake.chunks.pop().remove();
-            }
+
+            // Change class of previous chunk so it is no longer a head. 
+            let oldHead = currentSnake.chunks[1]; 
+            oldHead.className = `${playerClasses[i]} snakeChunk`; 
+            oldHead.style.transform = "rotate(0deg)";
     
             currentSnake.lastMoveDir = currentSnake.nextMoveDir; 
         }
@@ -628,11 +865,16 @@ function destroySnake(snake) {
 
     function destroyChunk(chunk) {
         if (currentChunk < totalChunks) {
-            snake.chunks[chunk].className += " vibrate destroyed";
+            snake.chunks[chunk].className += " destroyed";
             currentChunk++; 
             setTimeout(function() {
                 destroyChunk(currentChunk); 
             }, 125); 
+        } else {
+            // If all chunks have been animated, start destroying those bad boys after a short delay.
+            setTimeout(function() {
+                deleteChunks();
+            }, 1000); 
         }
     }
 
@@ -642,7 +884,7 @@ function destroySnake(snake) {
             deletedChunk++; 
             // If we have finished destroying this snake, check if there are no more snakes left. 
             if (snake.chunks.length < 1) {
-                checkGameOver();
+                checkRoundOver();
                 return;
             }
             setTimeout(function() {
@@ -652,29 +894,53 @@ function destroySnake(snake) {
     }
 
     destroyChunk(currentChunk);
-
-    setTimeout(function() {
-        deleteChunks();
-    }, 250 * snake.chunks.length); 
 }
 
-function checkGameOver() {
-    let snakesLeft = 0;
+function checkRoundOver() {
+    let snakesLeft = [];
     for (let snakeNo = 0; snakeNo < snakes.length; snakeNo++) {
         let currentSnake = snakes[snakeNo]; 
         if (currentSnake.alive) {
-            // Update scoring stuff. 
+            // Update scoring stuff for last snake standing. 
             lastSnakeStanding = currentSnake; 
-            snakesLeft++; 
+            snakesLeft.push(snakeNo); 
         }
         if (biggestSnake.food < currentSnake.score) {
             biggestSnake.name = currentSnake.name;
             biggestSnake.food = currentSnake.score;
         }
     }
-    if (snakesLeft < 2) {
-        showEndScreen();
+    // Game over flag doesn't stop text triggering twice... why? 
+    if (snakesLeft.length < 2 && !gameOver) {
+        // gameOver = true;
+        // showEndScreen();
+        let lastSnake = snakesLeft[0]; 
+        playerData[lastSnake].roundsWon++; 
+        endRound();
     }
+}
+
+function endGame(winningSnake) {
+    gameOver = true;
+    let gameOverText = createText("GAME!", "centeredText roundOver unselectable"); 
+}
+
+function endRound() {
+
+    // Start a new round when someone hits space. 
+    // Stop all snakes from moving, and also enables space to trigger new round instead of pausing. 
+    roundOver = true;
+
+    // Check to see if anyone has won the game. 
+    for (let i = 0; i < playerData.length; i++) {
+        if (playerData[i].roundsWon >= roundsToWin) {
+            endGame(snakes[i]);
+            // Return so we skip putting round over text etc. on screen and instead do game over stuff. 
+            return;
+        }
+    }
+    // Do some fancy graphics! 
+    let roundOverText = createText("ROUND!", "centeredText roundOver unselectable");
 }
 
 function createNewChunk(x, y, playerClass) {
