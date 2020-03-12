@@ -71,7 +71,7 @@ const NORMAL = 250;
 const FAST = 375; 
 const INSANE = 500; 
 
-const GAME_SPEED = [{name:"SLOW", speed:500}, {name:"NORMAL", speed:325}, {name:"FAST", speed:200}, {name:"FASTER", speed:75}, {name:"INSANE", speed:50}];
+const GAME_SPEED = [{name:"SLOW", speed:500}, {name:"NORMAL", speed:325}, {name:"FAST", speed:200}, {name:"FASTER", speed:75}, {name:"INSANE", speed:50}, {name:"???", speed:"R"}];
 
 // "Global" stuff. 
 var state = TITLE_SCREEN;
@@ -98,9 +98,9 @@ var currentRound = 0;
 // Store info for end game display. 
 var lastSnakeStanding = null; 
 var biggestSnake = {name:"NOBODY", food:"0"}; 
-var compliments = ["GARGANTUAN", "GLORIOUS", "SPECTACULAR", "GODLIKE", "HIDEOUS", "DEFORMED", "BLURFING", "SCHPLINDLEOUS"];
-var eating = ["SCOFFED", "MUNCHED ON", "SCARFED", "GOBBLED", "SCHLOIMBRD", "FIT INTO THEIR GOBHOLE", "SCRIMBLED", "GNASHED", "STOLE FROM THE MOUTHS OF CHILDREN"];
-var foods = ["FESTERING SCHWIMBLES", "TURNIPS", "SLIGHTLY SMALLER SNAKES", "WEIRD ROTATING SQUARES", "DARK MATTER", "PIXEL BITZ", "HAGGIS", "DOUGHNUT HOLES", "FRESH GLOMBLES", " PREMIUM SCHPLARFNITZLS", "TOAST"];
+var compliments = ["GARGANTUAN", "GLORIOUS", "SPECTACULAR", "GODLIKE", "HIDEOUS", "DEFORMED", "BLURFING", "SCHPLINDLEOUS", "BREATHTAKING", "TOTALLY GORGEOUS", "SNAKE-LIKE", "SNAKE-ISH", "FLOPPY", "FLOPPING", "GERFLINGTONINGLY"];
+var eating = ["SCOFFED", "MUNCHED ON", "SCARFED", "GOBBLED", "SCHLOIMBRD", "FIT INTO THEIR GOBHOLE", "SCRIMBLED", "GNASHED", "STOLE FROM THE MOUTHS OF CHILDREN", "FLEECED", "LOOTED", "SPLURFLED", "ATE WITH THEIR MOUTH", "DEVOURED", "GOBSHNARFED", "STOLE FROM A CHARITY SHOP", "GLOBBISHLY MUNCHED"];
+var foods = ["FESTERING SCHWIMBLES", "TURNIPS", "SLIGHTLY SMALLER SNAKES", "YOUR MUM", "WEIRD ROTATING SQUARES", "DARK MATTER", "PIXEL BITZ", "HAGGIS", "DOUGHNUT HOLES", "FRESH GLOMBLES", " PREMIUM SCHPLARFNITZLS", "TOAST", "GOOBERS", "EYE HOLES", "WORMS WHICH ARE NOT AT ALL LIKE SNAKES", "SCRUMBLES"];
 var currentEndText = 0;
 var endTexts = [];
 
@@ -146,11 +146,16 @@ function showTitle() {
     resetMoveTimer(GAME_SPEED[1].speed);
 }
 
-function resetMoveTimer(time) {
+function resetMoveTimer(speed) {
     clearInterval(moveInterval);
+    if (speed == "R") {
+        let index = Math.floor(Math.random() * (GAME_SPEED.length - 2)); 
+        console.log("RANDOMISING SPEED TO INDEX " + index); 
+        speed = GAME_SPEED[index].speed; 
+    }
     moveInterval = setInterval(function() {
         moveSnakes();
-    }, time); 
+    }, speed); 
 }
 
 addEventListener("keydown", function(e) {
@@ -236,12 +241,67 @@ function setupLowerSpeed() {
         gameSpeedSetting--; 
         document.getElementById("setup_speed").innerText = GAME_SPEED[gameSpeedSetting].name; 
     }
+    resetMoveTimer(GAME_SPEED[gameSpeedSetting].speed); 
 }
 
 function setupHigherSpeed() {
     if (gameSpeedSetting < GAME_SPEED.length - 1) {
         gameSpeedSetting++; 
         document.getElementById("setup_speed").innerText = GAME_SPEED[gameSpeedSetting].name; 
+    }
+    resetMoveTimer(GAME_SPEED[gameSpeedSetting].speed); 
+}
+
+function previousOption() {
+    let options = document.getElementsByClassName("setupText");
+    let selected = document.getElementsByClassName("selectedSetupText");  
+    for (let i = options.length - 1; i >= 0; i--) {
+        if (options[i].className.includes("selectedSetupText")) {
+            options[i].className = "setupOption setupText pulse"; 
+            let nextOption = i - 1 >= 0 ? i - 1 : options.length - 1; 
+            options[nextOption].className = "setupOption setupText selectedSetupText pulse"; 
+            break; 
+        }
+    }
+}
+
+function nextOption() {
+    let options = document.getElementsByClassName("setupText"); 
+    for (let i = 0; i < options.length; i++) {
+        if (options[i].className.includes("selectedSetupText")) {
+            options[i].className = "setupOption setupText pulse"; 
+            let nextOption = i + 1 < options.length ? i + 1 : 0; 
+            options[nextOption].className = "setupOption setupText selectedSetupText pulse"; 
+            break; 
+        }
+    }
+}
+
+function changeOptionSetting(up) {
+    let selected = document.getElementsByClassName("selectedSetupText"); 
+    let option = selected[0].id; 
+    switch(option) {
+        case "setup_rounds":
+            if (up) {
+                setupMoreRounds();
+            } else {
+                setupLessRounds(); 
+            }
+            break;
+        case "setup_players":
+            if (up) {
+                setupMorePlayers();
+            } else {
+                setupLessPlayers(); 
+            }
+            break;
+        case "setup_speed":
+            if (up) {
+                setupHigherSpeed();
+            } else {
+                setupLowerSpeed(); 
+            }
+            break;
     }
 }
 
@@ -279,7 +339,7 @@ function showSetupScreen() {
 
     let rounds = document.createElement("div");
     rounds.innerText = roundsToWin;  
-    rounds.className = "setupOption setupText pulse"; 
+    rounds.className = "setupOption setupText selectedSetupText pulse"; 
     rounds.id = "setup_rounds"; 
 
     let moreRounds = document.createElement("a");
@@ -339,6 +399,7 @@ function showSetupScreen() {
     ok.className = "setupOption setupText"; 
     ok.innerText = "OK"; 
     ok.id = "setup_ok"; 
+    ok.style = "margin-top: 10px;"; 
     ok.href = `javascript:startGame(${playersYo})`;
 
     okLine.appendChild(ok); 
@@ -355,7 +416,12 @@ function showSetupScreen() {
     settingsContainer.appendChild(okLine); 
 
     GAME.appendChild(settingsContainer); 
-    
+
+    createSnake(25, 325, 8, UP, playerClasses[0], "who cares");
+    createSnake(350, 325, 8, DOWN, playerClasses[1], "filler");
+
+    // Kick off interval that moves the snakes. 
+    resetMoveTimer(GAME_SPEED[2].speed); 
 }
 
 function showEndScreen() {
@@ -369,11 +435,14 @@ function showEndScreen() {
     endTexts[0] = `THE LAST SNAKE STANDING WAS ${lastSnakeName}`;
     endTexts[1] =  `THE MOST ${compliments[Math.round((Math.random() * (compliments.length - 1)))]} SNAKE WAS ${biggestSnake.name} WHO ${eating[Math.round((Math.random() * (eating.length - 1)))]} ${biggestSnake.food} PIECES OF ${foods[Math.round((Math.random() * (foods.length - 1)))]}.`;
 
+    /*
     let pl1 = document.createElement("a"); 
     pl1.className = "centeredText";
     pl1.innerText = endTexts[0];
     GAME.appendChild(pl1);
+    */
 
+    let pl1 = createText(endTexts[0], "centeredText endText"); 
 
     // Re-do this so uses event listeners etc.! More reliable timing! 
     setTimeout(function() {
@@ -437,7 +506,6 @@ function createSnake(originX, originY, startLength, initialMoveDir, playerClass,
     snakes.push(newSnake); 
 }
 
-
 function startGame(players) {
     playerData = []; 
     for (let i = 0; i < players; i++) {
@@ -491,7 +559,6 @@ function startRound(players) {
     }
 
     function removeCountdown() {
-        console.log("REMOVING!!");
         countdown.removeEventListener("animationiteration", updateCountdown, false);
         countdown.removeEventListener("animationend", removeCountdown, false); 
         countdown.remove();
@@ -687,7 +754,27 @@ function handleInput(e) {
 
         case SETTINGS_SCREEN:
             switch(e.which) {
-
+                case PLAYER_1_UP:
+                    previousOption();
+                    break;
+                case PLAYER_1_DOWN: 
+                    nextOption();
+                    break;
+                case PLAYER_1_LEFT:
+                    // turn option down
+                    changeOptionSetting(0); 
+                    break;
+                case PLAYER_1_RIGHT:
+                    // turn option up
+                    changeOptionSetting(1); 
+                    break;
+                case SPACE:
+                    // if on OK option, start game. 
+                    startGame(playersYo);
+                    break;
+                case ESCAPE:
+                    showTitle(); 
+                    break;
             }
             break;
 
@@ -806,6 +893,7 @@ function moveSnakes() {
                     currentSnake.score++;
                     supermarket.pop().remove();
                     currentSnake.targetLength++; 
+                    resetMoveTimer(GAME_SPEED[gameSpeedSetting].speed); 
                     spawnFood(); 
                 }
             }

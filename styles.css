@@ -104,6 +104,8 @@ body {
   width: 30%; 
   height: 100%;
   display: inline-block;
+  color: white; 
+  text-decoration: none;
 }
 
 .setupTitle {
@@ -115,6 +117,10 @@ body {
   top: 25px; 
   height: auto;
   transform: translateY(-50%);
+}
+
+.selectedSetupText {
+  color: yellow; 
 }
 
 .add {
@@ -139,6 +145,14 @@ body {
   font-size: 2.5rem;
   text-decoration: none;
   z-index: 20; 
+}
+
+.endText {
+  animation-duration: 10s;
+  animation-timing-function: linear;
+  animation-name: fadeInOut;
+  animation-direction: alternate;
+  animation-iteration-count: infinite; 
 }
 
 .roundOver {
