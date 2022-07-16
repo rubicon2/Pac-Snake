@@ -62,7 +62,7 @@ const startLengths = [12, 12, 6, 3];
 const startPositionsX = [50, 325,  50, 325];
 const startPositionsY = [50, 325, 325,  50]; 
 const startMoveDir = [UP, DOWN, LEFT, RIGHT]; 
-const playerNames = ["YELLOW", "BLUE", "RED", "GREEN"];
+const playerNames = ["PINK", "BLUE", "RED", "GREEN"];
 const playerClasses = ["player1", "player2", "player3", "player4"];
 
 // Different speeds. 
