@@ -1,5 +1,10 @@
+@font-face {
+  font-family: Heebo;
+  src: url("fonts/Heebo-SemiBold.ttf");
+}
+
 body {
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; 
+    font-family: Heebo, 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; 
     color: white; 
     size: 3rem;
     -webkit-touch-callout: none;
