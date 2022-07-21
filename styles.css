@@ -153,6 +153,7 @@ body {
 }
 
 .endText {
+  font-size: 32px;
   animation-duration: 10s;
   animation-timing-function: linear;
   animation-name: fadeInOut;
