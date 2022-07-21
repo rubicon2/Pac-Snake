@@ -984,6 +984,14 @@ function destroySnake(snake) {
     destroyChunk(currentChunk);
 }
 
+function createScoresMessage() {
+    let msg = "";
+    for(let i = 0; i < snakes.length; i++) {
+        msg += `${snakes[i].name}: ${playerData[i].roundsWon}\n`;
+    }
+    return msg;
+}
+
 function checkRoundOver() {
     let snakesLeft = [];
     for (let snakeNo = 0; snakeNo < snakes.length; snakeNo++) {
@@ -999,12 +1007,14 @@ function checkRoundOver() {
         }
     }
     // Game over flag doesn't stop text triggering twice... why? 
-    if (snakesLeft.length < 2 && !gameOver) {
+    if (snakesLeft.length == 1 && !gameOver) {
         // gameOver = true;
         // showEndScreen();
         let lastSnake = snakesLeft[0]; 
         playerData[lastSnake].roundsWon++; 
-        endRound();
+        endRound(createScoresMessage());
+    } else if (snakesLeft < 1 && !gameOver) {
+        endRound("FAILURE!");
     }
 }
 
@@ -1013,7 +1023,7 @@ function endGame(winningSnake) {
     let gameOverText = createText("GAME!", "centeredText roundOver unselectable"); 
 }
 
-function endRound() {
+function endRound(message) {
 
     // Start a new round when someone hits space. 
     // Stop all snakes from moving, and also enables space to trigger new round instead of pausing. 
@@ -1028,7 +1038,7 @@ function endRound() {
         }
     }
     // Do some fancy graphics! 
-    let roundOverText = createText("ROUND!", "centeredText roundOver unselectable");
+    let roundOverText = createText(message, "centeredText roundOver unselectable");
 }
 
 function createNewChunk(x, y, playerClass) {
