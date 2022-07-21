@@ -433,7 +433,7 @@ function showEndScreen() {
     let endTexts = [];
     let lastSnakeName = lastSnakeStanding == null ? "ABSOLUTELY NOBODY!" : lastSnakeStanding.name;
     endTexts[0] = `THE LAST SNAKE STANDING WAS ${lastSnakeName}`;
-    endTexts[1] =  `THE MOST ${compliments[Math.round((Math.random() * (compliments.length - 1)))]} SNAKE WAS ${biggestSnake.name} WHO ${eating[Math.round((Math.random() * (eating.length - 1)))]} ${biggestSnake.food} PIECES OF ${foods[Math.round((Math.random() * (foods.length - 1)))]}.`;
+    endTexts[1] =  `THE LONGEST AND MOST ${compliments[Math.round((Math.random() * (compliments.length - 1)))]} SNAKE WAS ${biggestSnake.name} WHO ${eating[Math.round((Math.random() * (eating.length - 1)))]} ${biggestSnake.food} PIECES OF ${foods[Math.round((Math.random() * (foods.length - 1)))]}.`;
 
     /*
     let pl1 = document.createElement("a"); 
@@ -507,6 +507,8 @@ function createSnake(originX, originY, startLength, initialMoveDir, playerClass,
 }
 
 function startGame(players) {
+    biggestSnake.name = "ABSOLUTELY NOBODY";
+    biggestSnake.food = 0;
     playerData = []; 
     for (let i = 0; i < players; i++) {
         let player = new Object(); 
@@ -529,8 +531,6 @@ function startRound(players) {
 
     // Reset high score values. 
     lastSnakeStanding = null;
-    biggestSnake.name = "ABSOLUTELY NOBODY";
-    biggestSnake.food = 0; 
 
     // Create the number of snakes we need and their initial chunks. 
     for (let i = 0; i < players; i++) {
