@@ -104,6 +104,33 @@ var foods = ["FESTERING SCHWIMBLES", "TURNIPS", "SLIGHTLY SMALLER SNAKES", "YOUR
 var currentEndText = 0;
 var endTexts = [];
 
+const munchSounds = [
+    new Audio("audio/munch_1.mp3"),
+    new Audio("audio/munch_2.mp3"),
+    new Audio("audio/munch_3.mp3"),
+    new Audio("audio/munch_4.mp3"),
+    new Audio("audio/munch_5.mp3"),
+    new Audio("audio/munch_6.mp3")
+];
+
+const deathSounds = [
+    new Audio("audio/die_1.mp3"),
+    new Audio("audio/die_2.mp3"),
+    new Audio("audio/die_3.mp3"),
+    new Audio("audio/die_4.mp3"),
+    new Audio("audio/die_low2.mp3"),
+]
+
+const countdownAudio = new Audio("audio/321_go.mp3");
+const scoreAudio = new Audio("audio/new_hi_score.mp3");
+const roundOverAudio = new Audio("audio/round_over.mp3");
+const gameOverAudio = new Audio("audio/game_over.mp3");
+
+function getRandomInt(min, max) {
+    let range = max + 1 - min;
+    return Math.floor(Math.random() * range) + min;
+}
+
 function clearScreen() {
 
     // WARNING! 
@@ -434,7 +461,6 @@ function showEndScreen() {
     let lastSnakeName = lastSnakeStanding == null ? "ABSOLUTELY NOBODY!" : lastSnakeStanding.name;
     endTexts[0] = `THE LAST SNAKE STANDING WAS ${lastSnakeName}`;
     endTexts[1] =  `THE LONGEST AND MOST ${compliments[Math.round((Math.random() * (compliments.length - 1)))]} SNAKE WAS ${biggestSnake.name} WHO ${eating[Math.round((Math.random() * (eating.length - 1)))]} ${biggestSnake.food} PIECES OF ${foods[Math.round((Math.random() * (foods.length - 1)))]}.`;
-
     /*
     let pl1 = document.createElement("a"); 
     pl1.className = "centeredText";
@@ -448,6 +474,7 @@ function showEndScreen() {
     setTimeout(function() {
         // After text has faded out again. 
         pl1.innerText = endTexts[1];
+        scoreAudio.play();
         setTimeout(function() {
             pl1.remove();
             setTimeout(function() {
@@ -538,6 +565,7 @@ function startRound(players) {
     }
 
     let countdown = createText("3", "countdownText unselectable");
+    //countdownAudio.play();
 
     function updateCountdown() {
         let newText = parseInt(countdown.innerText) - 1;
@@ -890,6 +918,7 @@ function moveSnakes() {
                 let foodX = posToInt(food.style.left);
                 let foodY = posToInt(food.style.top); 
                 if (newX == foodX && newY == foodY) {
+                    munchSounds[getRandomInt(0, munchSounds.length - 1)].play();
                     currentSnake.score++;
                     supermarket.pop().remove();
                     currentSnake.targetLength++; 
@@ -944,6 +973,8 @@ function moveSnakes() {
 }
 
 function destroySnake(snake) {
+
+    deathSounds[getRandomInt(0, deathSounds.length - 1)].play();
 
     // Dispose of this snake... with style (hopefully)! 
     snake.alive = false;
@@ -1021,6 +1052,7 @@ function checkRoundOver() {
 function endGame(winningSnake) {
     gameOver = true;
     let gameOverText = createText("GAME!", "centeredText roundOver unselectable"); 
+    gameOverAudio.play();
 }
 
 function endRound(message) {
@@ -1039,6 +1071,7 @@ function endRound(message) {
     }
     // Do some fancy graphics! 
     let roundOverText = createText(message, "centeredText roundOver unselectable");
+    roundOverAudio.play();
 }
 
 function createNewChunk(x, y, playerClass) {
