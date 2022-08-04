@@ -116,7 +116,6 @@ const munchSounds = [
 const deathSounds = [
     new Audio("audio/die_1.mp3"),
     new Audio("audio/die_2.mp3"),
-    new Audio("audio/die_3.mp3"),
     new Audio("audio/die_4.mp3"),
     new Audio("audio/die_low2.mp3"),
 ]
