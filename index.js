@@ -117,7 +117,6 @@ const deathSounds = [
     new Audio("audio/die_1.mp3"),
     new Audio("audio/die_2.mp3"),
     new Audio("audio/die_3.mp3"),
-    new Audio("audio/die_4.mp3"),
     new Audio("audio/die_low2.mp3"),
 ]
 
@@ -125,6 +124,7 @@ const countdownAudio = new Audio("audio/321_go.mp3");
 const scoreAudio = new Audio("audio/new_hi_score.mp3");
 const roundOverAudio = new Audio("audio/round_over.mp3");
 const gameOverAudio = new Audio("audio/game_over.mp3");
+const failureAudio = new Audio("audio/failure.mp3");
 
 function getRandomInt(min, max) {
     let range = max + 1 - min;
@@ -1044,8 +1044,10 @@ function checkRoundOver() {
         let lastSnake = snakesLeft[0]; 
         playerData[lastSnake].roundsWon++; 
         endRound(createScoresMessage());
+        roundOverAudio.play();
     } else if (snakesLeft < 1 && !gameOver) {
         endRound("FAILURE!");
+        failureAudio.play();
     }
 }
 
@@ -1071,7 +1073,6 @@ function endRound(message) {
     }
     // Do some fancy graphics! 
     let roundOverText = createText(message, "centeredText roundOver unselectable");
-    roundOverAudio.play();
 }
 
 function createNewChunk(x, y, playerClass) {
