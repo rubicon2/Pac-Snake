@@ -1044,7 +1044,6 @@ function checkRoundOver() {
         let lastSnake = snakesLeft[0]; 
         playerData[lastSnake].roundsWon++; 
         endRound(createScoresMessage());
-        roundOverAudio.play();
     } else if (snakesLeft < 1 && !gameOver) {
         endRound("FAILURE!");
         failureAudio.play();
@@ -1073,6 +1072,7 @@ function endRound(message) {
     }
     // Do some fancy graphics! 
     let roundOverText = createText(message, "centeredText roundOver unselectable");
+    roundOverAudio.play();
 }
 
 function createNewChunk(x, y, playerClass) {
