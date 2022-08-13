@@ -1043,11 +1043,9 @@ function checkRoundOver() {
         // showEndScreen();
         let lastSnake = snakesLeft[0]; 
         playerData[lastSnake].roundsWon++; 
-        endRound(createScoresMessage());
-        roundOverAudio.play();
+        endRound(createScoresMessage(), roundOverAudio);
     } else if (snakesLeft < 1 && !gameOver) {
-        endRound("FAILURE!");
-        failureAudio.play();
+        endRound("FAILURE!", failureAudio);
     }
 }
 
@@ -1057,7 +1055,7 @@ function endGame(winningSnake) {
     gameOverAudio.play();
 }
 
-function endRound(message) {
+function endRound(message, audio) {
 
     // Start a new round when someone hits space. 
     // Stop all snakes from moving, and also enables space to trigger new round instead of pausing. 
@@ -1071,6 +1069,7 @@ function endRound(message) {
             return;
         }
     }
+    audio.play();
     // Do some fancy graphics! 
     let roundOverText = createText(message, "centeredText roundOver unselectable");
 }
